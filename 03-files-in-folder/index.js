@@ -8,7 +8,7 @@ async function getDirFiles (pathToDir) {
       if (dirent.isFile()) {
         const {ext, name} = path.parse(path.join(pathToDir, dirent.name));
         fs.stat(path.join(pathToDir, dirent.name), (err, stats) => {
-          if (err) console.log(err);
+          if (err) throw err;
           console.log(`${name} - ${ext.slice(1)} - ${stats.size}b`);
         });
       }
