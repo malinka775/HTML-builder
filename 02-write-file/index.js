@@ -17,3 +17,6 @@ process.stdin.on('data', data => {
 process.on('exit', () => {
   process.stdout.write('--- All the info now is in "02-write-file/result.txt"! Bye! ---');
 });
+process.on('SIGINT', () => {
+  process.exit();
+});
