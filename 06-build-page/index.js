@@ -49,24 +49,28 @@ async function mergeStyles () {
   
 }
 async function deleteDirectory(pathToDir) {
-  const dirents = await fsPromises.readdir(pathToDir, {withFileTypes: true});
-  for (const dirent of dirents) {
-    if (dirent.isFile()) {
-      fs.rm(path.join(pathToDir, dirent.name), { recursive:true, force: true  }, err => {
-        if (err) {console.log(err.message);}
-      });
-    } else if (dirent.isDirectory()){
-      const innerDirents = await fsPromises.readdir(path.join(pathToDir, dirent.name), {withFileTypes: true});
-      if(innerDirents.length) {
-        await deleteDirectory(path.join(pathToDir, dirent.name));
-      } else {
-        fs.rm(path.join(pathToDir, dirent.name), { recursive:true, force: true  }, err => {
-          if (err) {console.log(err.message);}
-        });
+  try {
+    const dirents = await fsPromises.readdir(pathToDir, {withFileTypes: true});
+    if (dirents.length > 0) {
+      for (const dirent of dirents) {
+        if (dirent.isDirectory()){
+          await deleteDirectory(path.join(pathToDir, dirent.name));
+        } else {
+          await fsPromises.rm(path.join(pathToDir, dirent.name), { recursive:true, force: true  }, err => {
+            if (err) {console.log(err.message);}
+          });
+        }
       }
-      
     } 
+    await fsPromises.rm(pathToDir, { recursive:true, force: true  }, err => {
+      if (err) {console.log(err.message);}
+    });
+  } catch (error) {
+    return;
   }
+  
+  
+  
 }
 
 
@@ -90,7 +94,7 @@ async function copyDirFiles (initialPath, destinationPath) {
       }
     }
   } catch (err) {
-    console.error(err);
+    console.error('from copydir', err.message);
   }
 }
 try {
@@ -102,12 +106,14 @@ try {
     fs.access(destinationPath, async function(error) {
       if (!error) {
         await deleteDirectory(destinationPath);
-      } 
+        await mergeStyles();
+        await copyDirFiles(sourcePath, destinationPath);
+      } else {
+        await mergeStyles();
+        await copyDirFiles(sourcePath, destinationPath);
+      }
     });
-    await mergeStyles();
-    await copyDirFiles(sourcePath,destinationPath);
   })();
 } catch (error) {
   console.error(error);
 }
-
